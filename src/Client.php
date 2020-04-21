@@ -163,4 +163,12 @@ class Client
     {
         $this->handlers[$jobType] = $callback;
     }
+
+    /**
+     * @return bool
+     */
+    public function hasConnexion(): bool
+    {
+        return $this->hasConnexion;
+    }
 }
