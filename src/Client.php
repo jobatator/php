@@ -18,9 +18,9 @@ class Client
     private string $host;
 
     /**
-     * @var int
+     * @var string
      */
-    private int $port;
+    private string $port;
 
     /**
      * @var string
