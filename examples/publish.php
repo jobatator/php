@@ -1,6 +1,6 @@
 <?php
 
-require 'vendor/autoload.php';
+require '../vendor/autoload.php';
 
 $client = new \Lefuturiste\Jobatator\Client("localhost", "8962", "root", "root", "staileu");
 var_dump($client->createConnexion());
