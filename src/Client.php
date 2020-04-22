@@ -45,7 +45,7 @@ class Client
     /**
      * @var bool
      */
-    private bool $hasConnexion;
+    private bool $hasConnexion = false;
 
     /**
      * @var array
@@ -56,6 +56,8 @@ class Client
      * @var mixed
      */
     private $rootValue;
+
+    private bool $workerIsRunning = false;
 
     /**
      * Client constructor.
@@ -115,7 +117,7 @@ class Client
 
     public function publish(string $jobType, $payload, string $queue = "default"): bool
     {
-        $this->write("PUBLISH " . $queue . " " . $jobType . " " . json_encode($payload));
+        $this->write("PUBLISH " . $queue . " " . $jobType . " '" . json_encode($payload) . "'");
         return $this->readLine() === "OK";
     }
 
@@ -125,10 +127,12 @@ class Client
         return $this->readLine() === "OK";
     }
 
-    public function startWorker(string $queue = "default")
+    public function startWorker(string $queue = "default", $jobsToProcess = -1)
     {
         $this->subscribe($queue);
-        while (true) {
+        $this->workerIsRunning = true;
+        $jobCount = 0;
+        while ($this->workerIsRunning) {
             $input = json_decode($this->readLine(), true);
             $input["Job"]["Payload"] = json_decode($input["Job"]["Payload"], true);
             $job = $input["Job"];
@@ -139,6 +143,11 @@ class Client
             $this->write("UPDATE_JOB " . $queue . " " . $job["ID"] . " done");
             if ($this->readLine() !== "OK") {
                 error_log("Failed to update job");
+            }
+            if ($jobsToProcess > 0) {
+                $jobCount++;
+                if ($jobsToProcess <= $jobCount)
+                    $this->workerIsRunning = false;
             }
         }
     }
@@ -170,5 +179,19 @@ class Client
     public function hasConnexion(): bool
     {
         return $this->hasConnexion;
+    }
+
+    /**
+     * @return Socket
+     */
+    public function getSocket(): Socket
+    {
+        return $this->socket;
+    }
+
+    public function quit()
+    {
+        $this->write("QUIT");
+        $this->hasConnexion = false;
     }
 }

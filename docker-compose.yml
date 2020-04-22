@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  jobatator:
+    image: lefuturiste/jobatator
+    container_name: jobatator_unit_test
+    restart: "no"
+    environment:
+      - STOP_POLICY=PUBLIC
+    ports:
+      - "8962:8962"
+    volumes:
+      - "./jobatator.unit-test.config.yml:/go/src/app/config.yml"
+  jobatator-php:
+      build: ./
+      restart: "no"
+      environment:
+        - JOBATATOR_HOST=jobatator
+      links:
+        - jobatator:jobatator
+      depends_on:
+        - jobatator

@@ -1,0 +1,10 @@
+groups:
+  - slug: "group1"
+  - slug: "group2"
+users:
+  - username: "user1"
+    password: "pass1"
+    groups: ["group1"]
+  - username: "user2"
+    password: "pass2"
+    groups: ["group2"]
