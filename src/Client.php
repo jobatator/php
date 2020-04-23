@@ -2,6 +2,7 @@
 
 namespace Lefuturiste\Jobatator;
 
+use Socket\Raw\Exception;
 use Socket\Raw\Factory;
 use Socket\Raw\Socket;
 
@@ -55,9 +56,18 @@ class Client
     /**
      * @var mixed
      */
-    private $rootValue;
+    private $rootValue = NULL;
 
     private bool $workerIsRunning = false;
+
+    private array $exceptionHandlers = [];
+
+    /**
+     * If true, the library will report error in STDERR
+     *
+     * @var bool
+     */
+    private bool $log = true;
 
     /**
      * Client constructor.
@@ -83,12 +93,16 @@ class Client
     public function createConnexion(): bool
     {
         $factory = new Factory();
-        $this->socket = $factory->createClient($this->host . ":" . $this->port);
+        try {
+            $this->socket = $factory->createClient($this->host . ":" . $this->port);
+        } catch (Exception $exception) {
+            throw new ConnectionException("Jobatator: Can't connect to server: " . $exception->getMessage());
+        }
         $this->write("AUTH " . $this->username . " " . $this->password);
-        if  ($this->readLine() !== "Welcome!")
+        if ($this->readLine() !== "Welcome!")
             throw new ConnectionException("Jobatator: Authentication issue: " . $this->getLastResponse());
         $this->write("USE_GROUP " . $this->group);
-        if  ($this->readLine() !== "OK")
+        if ($this->readLine() !== "OK")
             throw new ConnectionException("Jobatator: Can't use group: " . $this->getLastResponse());
         $this->hasConnexion = true;
         return $this->hasConnexion;
@@ -105,11 +119,12 @@ class Client
     }
 
     /**
+     * @param int $len
      * @return string
      */
-    public function readLine(): string
+    public function readLine(int $len = 2000): string
     {
-        $this->lastResponse = str_replace("\n", '', $this->socket->read(1000, PHP_NORMAL_READ));
+        $this->lastResponse = str_replace("\n", '', $this->socket->read($len, PHP_NORMAL_READ));
         return $this->lastResponse;
     }
 
@@ -143,11 +158,22 @@ class Client
             if (!isset($this->handlers[$job["Type"]])) {
                 break;
             }
-            call_user_func($this->handlers[$job["Type"]], $job["Payload"], $this->rootValue);
-            $this->write("UPDATE_JOB " . $queue . " " . $job["ID"] . " done");
-            if ($this->readLine() !== "OK") {
-                error_log("Failed to update job");
+            $return = false;
+            try {
+                $return = call_user_func($this->handlers[$job["Type"]], $job["Payload"], $this->rootValue);
+            } catch (\Exception $exception) {
+                foreach ($this->exceptionHandlers as $exceptionHandler)
+                    call_user_func($exceptionHandler, $exception);
             }
+            if ($return) {
+                $this->write("UPDATE_JOB " . $queue . " " . $job["ID"] . " done");
+            } else {
+                if ($this->log)
+                    error_log("Job " . $job["ID"] . " errored");
+                $this->write("UPDATE_JOB " . $queue . " " . $job["ID"] . " errored");
+            }
+            if ($this->readLine() !== "OK" && $this->log)
+                error_log("Failed to update job");
             if ($jobsToProcess > 0) {
                 $jobCount++;
                 if ($jobsToProcess <= $jobCount)
@@ -196,6 +222,23 @@ class Client
     public function quit()
     {
         $this->write("QUIT");
+        $this->readLine();
         $this->hasConnexion = false;
+    }
+
+    public function addExceptionHandler(callable $handler)
+    {
+        $this->exceptionHandlers[] = $handler;
+    }
+
+    public function debug(): array
+    {
+        $this->write("DEBUG_JSON");
+        return json_decode($this->readLine(), true);
+    }
+
+    public function mute(): void
+    {
+        $this->log = false;
     }
 }

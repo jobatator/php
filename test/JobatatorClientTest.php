@@ -9,11 +9,19 @@ class JobatatorClientTest extends TestCase
 {
     private ?Client $instance = null;
 
+    /**
+     * @return Client
+     * @throws ConnectionException
+     */
     public function getInstance(): Client
     {
         if ($this->instance == null) {
             $host = !getenv('JOBATATOR_HOST') ? "localhost" : getenv('JOBATATOR_HOST');
             $this->instance = new Client($host, '8962', 'user1', 'pass1', 'group1');
+            $this->instance->mute();
+        }
+        if (!$this->instance->hasConnexion()) {
+            $this->instance->createConnexion();
         }
         return $this->instance;
     }
@@ -57,8 +65,35 @@ class JobatatorClientTest extends TestCase
         $instance->addHandler("job.type1", function ($payload, $globalValue) use ($expectedPayload, $rootValue) {
             $this->assertEquals($rootValue, $globalValue);
             $this->assertEquals($expectedPayload, $payload);
+            return true;
         });
         $instance->startWorker('default', 1);
+        $debug = $instance->debug();
+        $this->assertEquals("done", $debug["Queues"][0]["Jobs"][0]["State"]);
+    }
+
+    /**
+     * @throws ConnectionException
+     */
+    public function testFailingWorker()
+    {
+        $instance = $this->getInstance();
+        $expectedPayload = "payload";
+        $instance->publish("job.failing", $expectedPayload);
+        $instance->addExceptionHandler(function (Exception $exception) {
+            $this->assertInstanceOf(Exception::class, $exception);
+            $this->assertEquals("hello", $exception->getMessage());
+            $this->assertEquals(4, $exception->getCode());
+        });
+        $instance->addHandler("job.failing", function ($payload, $globalValue) use ($expectedPayload) {
+            $this->assertNull($globalValue);
+            $this->assertEquals($expectedPayload, $payload);
+            throw new Exception("hello", 4);
+        });
+        $instance->startWorker('default', 1);
+        $instance->readLine();
+        $debug = $instance->debug();
+        $this->assertEquals("errored", $debug["Queues"][0]["Jobs"][1]["State"]);
     }
 
     /**
