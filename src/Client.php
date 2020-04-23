@@ -76,16 +76,20 @@ class Client
         $this->group = $group;
     }
 
+    /**
+     * @return bool
+     * @throws ConnectionException on error
+     */
     public function createConnexion(): bool
     {
         $factory = new Factory();
         $this->socket = $factory->createClient($this->host . ":" . $this->port);
         $this->write("AUTH " . $this->username . " " . $this->password);
         if  ($this->readLine() !== "Welcome!")
-            return false;
+            throw new ConnectionException("Jobatator: Authentication issue: " . $this->getLastResponse());
         $this->write("USE_GROUP " . $this->group);
         if  ($this->readLine() !== "OK")
-            return false;
+            throw new ConnectionException("Jobatator: Can't use group: " . $this->getLastResponse());
         $this->hasConnexion = true;
         return $this->hasConnexion;
     }

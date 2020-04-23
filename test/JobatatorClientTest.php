@@ -1,7 +1,9 @@
 <?php
 
 use Lefuturiste\Jobatator\Client;
+use Lefuturiste\Jobatator\ConnectionException;
 use PHPUnit\Framework\TestCase;
+use Socket\Raw\Socket;
 
 class JobatatorClientTest extends TestCase
 {
@@ -16,11 +18,15 @@ class JobatatorClientTest extends TestCase
         return $this->instance;
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function testConnexion()
     {
         $instance = $this->getInstance();
-        $this->assertTrue($instance->createConnexion());
+        $this->assertTrue($this->instance->createConnexion());
         $this->assertTrue($instance->hasConnexion());
+        $this->assertInstanceOf(Socket::class, $instance->getSocket());
         $this->assertTrue($instance->ping());
         $this->assertEquals("PONG", $instance->getLastResponse());
         $instance->quit();
@@ -29,6 +35,9 @@ class JobatatorClientTest extends TestCase
         $instance->ping();
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function testWorker()
     {
         $instance = $this->getInstance();
@@ -52,6 +61,9 @@ class JobatatorClientTest extends TestCase
         $instance->startWorker('default', 1);
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function testEndOfServer()
     {
         $instance = $this->getInstance();
