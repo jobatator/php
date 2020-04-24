@@ -5,6 +5,7 @@ namespace Lefuturiste\Jobatator;
 use Socket\Raw\Exception;
 use Socket\Raw\Factory;
 use Socket\Raw\Socket;
+use Throwable;
 
 class Client
 {
@@ -161,7 +162,7 @@ class Client
             $return = false;
             try {
                 $return = call_user_func($this->handlers[$job["Type"]], $job["Payload"], $this->rootValue);
-            } catch (\Exception $exception) {
+            } catch (Throwable $exception) {
                 foreach ($this->exceptionHandlers as $exceptionHandler)
                     call_user_func($exceptionHandler, $exception);
             }
