@@ -8,3 +8,4 @@ users:
   - username: "user2"
     password: "pass2"
     groups: ["group2"]
+log_level: "DEBUG"
