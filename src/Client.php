@@ -167,11 +167,11 @@ class Client
                     call_user_func($exceptionHandler, $exception);
             }
             if ($return) {
-                $this->write("UPDATE_JOB " . $queue . " " . $job["ID"] . " done");
+                $this->write("UPDATE_JOB " . $job["ID"] . " done");
             } else {
                 if ($this->log)
                     error_log("Job " . $job["ID"] . " errored");
-                $this->write("UPDATE_JOB " . $queue . " " . $job["ID"] . " errored");
+                $this->write("UPDATE_JOB " . $job["ID"] . " errored");
             }
             if ($this->readLine() !== "OK" && $this->log)
                 error_log("Failed to update job");
