@@ -104,7 +104,7 @@ class JobatatorClientTest extends TestCase
         $instance = $this->getInstance();
         $instance->createConnexion();
         
-        $this->assertTrue($instance->publish("my_job", "my_payload"));
+        $this->assertNotEquals("", $instance->publish("my_job", "my_payload"));
 
         $instance->write("LIST_JOBS default");
         $debug = json_decode($instance->readLine(), true);

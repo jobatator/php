@@ -135,10 +135,14 @@ class Client
         return $this->readLine() === "PONG";
     }
 
-    public function publish(string $jobType, $payload, string $queue = "default"): bool
+    public function publish(string $jobType, $payload, string $queue = "default"): string
     {
         $this->write("PUBLISH " . $queue . " " . $jobType . " '" . json_encode($payload) . "'");
-        return $this->readLine() === "OK";
+        $result = $this->readLine();
+        if (substr($result, 0, 3) !== "OK#")
+            return "";
+        else
+            return substr($result, 3);
     }
 
     public function subscribe(string $queue = "default"): bool
