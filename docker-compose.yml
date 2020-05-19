@@ -4,8 +4,6 @@ services:
     image: lefuturiste/jobatator
     container_name: jobatator_unit_test
     restart: "no"
-    environment:
-      - STOP_POLICY=PUBLIC
     ports:
       - "8962:8962"
     volumes:

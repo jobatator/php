@@ -9,3 +9,5 @@ users:
     password: "pass2"
     groups: ["group2"]
 log_level: "DEBUG"
+test_mode: true
+delay_policy: "IGNORE"
