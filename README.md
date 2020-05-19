@@ -11,7 +11,7 @@ Use this library to publish and consume jobs on a jobatator server.
  
  ## Publisher usage
  
- ```php
+~~~php
 $client = new \Lefuturiste\Jobatator\Client(
     "localhost",
     "8962",
@@ -25,11 +25,11 @@ $client->createConnexion();
 
  // return true if publish succeeded
 $client->publish("my_job_type", ["payload" => ["something" => 12]]); 
-```
+~~~
 
 ## Consumer usage
 
-```php
+~~~php
 $client = new \Lefuturiste\Jobatator\Client(
     "localhost",
     "8962",
@@ -45,4 +45,4 @@ $client->addHandler("my_job_type", function(array $payload, $rootValue) {
     // you can use the $rootValue var to get back your $rootValue variable
 });
 $client->startWorker(); // will listen forever until the process stop
-```
+~~~
