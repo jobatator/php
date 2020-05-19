@@ -99,6 +99,25 @@ class JobatatorClientTest extends TestCase
     /**
      * @throws ConnectionException
      */
+    public function testJobDeletion()
+    {
+        $instance = $this->getInstance();
+        $instance->createConnexion();
+        
+        $this->assertTrue($instance->publish("my_job", "my_payload"));
+
+        $instance->write("LIST_JOBS default");
+        $debug = json_decode($instance->readLine(), true);
+        $jobs = array_values(array_filter($debug, fn ($j) => $j['Type'] === 'my_job'));
+        $this->assertCount(1, $jobs);
+        
+        $instance->write("DELETE_JOB " . $jobs[0]['ID']);
+        $this->assertEquals("OK", $instance->readLine());
+    }
+
+    /**
+     * @throws ConnectionException
+     */
     public function testEndOfServer()
     {
         $instance = $this->getInstance();
