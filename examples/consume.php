@@ -5,7 +5,7 @@ use Lefuturiste\Jobatator\ConnectionException;
 
 require '../vendor/autoload.php';
 
-$client = new Client("localhost", "8962", "root", "root", "staileu");
+$client = new Client("localhost", "8962", "user1", "pass1", "group1");
 try {
     $client->createConnexion();
 } catch (ConnectionException $e) {
