@@ -151,6 +151,16 @@ class Client
         return $this->readLine() === "OK";
     }
 
+    public function recurrent(string $jobType, string $cronExpression, string $queue = "default"): string
+    {
+        $this->write("RECURRENT_JOB " . $queue . " " . $jobType . " '" . $cronExpression . "'");
+        $result = $this->readLine();
+        if (substr($result, 0, 3) !== "OK#")
+            return "";
+        else
+            return substr($result, 3);
+    }
+
     public function startWorker(string $queue = "default", $jobsToProcess = -1)
     {
         $this->subscribe($queue);

@@ -113,6 +113,26 @@ class JobatatorClientTest extends TestCase
         
         $instance->write("DELETE_JOB " . $jobs[0]['ID']);
         $this->assertEquals("OK", $instance->readLine());
+
+        $instance->write("PURGE_JOBS default");
+        $instance->readLine();
+        $instance->write("PURGE_WORKERS default");
+        $instance->readLine();
+    }
+
+    /**
+     * @throws ConnectionException
+     */
+    public function testRecurrentJobDeclaration()
+    {
+        $instance = $this->getInstance();
+        $instance->createConnexion();
+
+        $expr = "* * * * *";
+        $this->assertNotEquals("", $instance->recurrent("my_recurrent_job", $expr));
+        $debug = $instance->debug();
+        $this->assertEquals($expr, $debug["Queues"][0]["RecurrentJobs"][0]["CronExpression"]);
+        $this->assertEquals("my_recurrent_job", $debug["Queues"][0]["RecurrentJobs"][0]["Type"]);
     }
 
     /**
